@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CropAI — Explainable Crop Recommendation System</title>
+  <meta name="description" content="AI-powered crop recommendation using Random Forest and SHAP explainability. Get instant, explainable suggestions for the best crop based on your soil conditions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<!-- ══ BACKGROUND PARTICLES ══════════════════════════════════════════════ -->
+<div class="bg-particles" id="bgParticles"></div>
+
+<!-- ══ NAVBAR ════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="nav-icon">🌾</span>
+    <span class="nav-title">CropAI <span class="nav-badge">XAI</span></span>
+  </div>
+  <div class="nav-links">
+    <a href="#predict-section">Predict</a>
+    <a href="#results-section">Results</a>
+    <a href="#models-section">Models</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🤖 Powered by Explainable AI</div>
+    <h1 class="hero-title">
+      Smart <span class="gradient-text">Crop Recommendation</span><br/>System
+    </h1>
+    <p class="hero-subtitle">
+      Enter your soil &amp; climate conditions below. Our AI will recommend the best crop
+      and explain <em>exactly why</em> — powered by Random Forest + SHAP.
+    </p>
+    <div class="hero-stats" id="heroStats">
+      <div class="stat-pill">📊 22 Crop Types</div>
+      <div class="stat-pill">🧪 2200 Training Records</div>
+      <div class="stat-pill">✅ ~99% Accuracy</div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-orb"></div>
+    <div class="hero-emoji-orbit">
+      <span style="--i:0">🌾</span><span style="--i:1">🌽</span>
+      <span style="--i:2">🍅</span><span style="--i:3">🥭</span>
+      <span style="--i:4">☕</span><span style="--i:5">🍌</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══ INPUT FORM ════════════════════════════════════════════════════════ -->
+<section class="section" id="predict-section">
+  <div class="section-header">
+    <h2>🧪 Enter Soil &amp; Climate Parameters</h2>
+    <p>Adjust the sliders or type values directly. All fields are required.</p>
+  </div>
+
+  <div class="input-grid">
+
+    <!-- N -->
+    <div class="input-card" id="card-N">
+      <div class="input-card-header">
+        <span class="input-icon">🌿</span>
+        <div>
+          <div class="input-name">Nitrogen (N)</div>
+          <div class="input-unit">kg/ha</div>
+        </div>
+        <div class="input-value-display" id="display-N">90</div>
+      </div>
+      <input type="range" class="slider" id="slider-N" min="0" max="200" step="1" value="90" oninput="syncInput('N', this.value)" />
+      <input type="number" class="num-input" id="input-N" min="0" max="200" value="90" oninput="syncSlider('N', this.value)" placeholder="0-200" />
+      <div class="input-hint">Typical: 0 – 200 kg/ha</div>
+    </div>
+
+    <!-- P -->
+    <div class="input-card" id="card-P">
+      <div class="input-card-header">
+        <span class="input-icon">🔴</span>
+        <div>
+          <div class="input-name">Phosphorus (P)</div>
+          <div class="input-unit">kg/ha</div>
+        </div>
+        <div class="input-value-display" id="display-P">42</div>
+      </div>
+      <input type="range" class="slider" id="slider-P" min="0" max="150" step="1" value="42" oninput="syncInput('P', this.value)" />
+      <input type="number" class="num-input" id="input-P" min="0" max="150" value="42" oninput="syncSlider('P', this.value)" placeholder="0-150" />
+      <div class="input-hint">Typical: 0 – 150 kg/ha</div>
+    </div>
+
+    <!-- K -->
+    <div class="input-card" id="card-K">
+      <div class="input-card-header">
+        <span class="input-icon">🟡</span>
+        <div>
+          <div class="input-name">Potassium (K)</div>
+          <div class="input-unit">kg/ha</div>
+        </div>
+        <div class="input-value-display" id="display-K">43</div>
+      </div>
+      <input type="range" class="slider" id="slider-K" min="0" max="210" step="1" value="43" oninput="syncInput('K', this.value)" />
+      <input type="number" class="num-input" id="input-K" min="0" max="210" value="43" oninput="syncSlider('K', this.value)" placeholder="0-210" />
+      <div class="input-hint">Typical: 0 – 210 kg/ha</div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="input-card" id="card-temperature">
+      <div class="input-card-header">
+        <span class="input-icon">🌡️</span>
+        <div>
+          <div class="input-name">Temperature</div>
+          <div class="input-unit">°C</div>
+        </div>
+        <div class="input-value-display" id="display-temperature">21</div>
+      </div>
+      <input type="range" class="slider" id="slider-temperature" min="0" max="50" step="0.1" value="21" oninput="syncInput('temperature', this.value)" />
+      <input type="number" class="num-input" id="input-temperature" min="0" max="50" step="0.1" value="21" oninput="syncSlider('temperature', this.value)" placeholder="0-50" />
+      <div class="input-hint">Typical: 0 – 50 °C</div>
+    </div>
+
+    <!-- Humidity -->
+    <div class="input-card" id="card-humidity">
+      <div class="input-card-header">
+        <span class="input-icon">💧</span>
+        <div>
+          <div class="input-name">Humidity</div>
+          <div class="input-unit">%</div>
+        </div>
+        <div class="input-value-display" id="display-humidity">82</div>
+      </div>
+      <input type="range" class="slider" id="slider-humidity" min="0" max="100" step="0.1" value="82" oninput="syncInput('humidity', this.value)" />
+      <input type="number" class="num-input" id="input-humidity" min="0" max="100" step="0.1" value="82" oninput="syncSlider('humidity', this.value)" placeholder="0-100" />
+      <div class="input-hint">Typical: 0 – 100 %</div>
+    </div>
+
+    <!-- pH -->
+    <div class="input-card" id="card-ph">
+      <div class="input-card-header">
+        <span class="input-icon">⚗️</span>
+        <div>
+          <div class="input-name">pH Level</div>
+          <div class="input-unit">0 – 14</div>
+        </div>
+        <div class="input-value-display" id="display-ph">6.5</div>
+      </div>
+      <input type="range" class="slider" id="slider-ph" min="0" max="14" step="0.1" value="6.5" oninput="syncInput('ph', this.value)" />
+      <input type="number" class="num-input" id="input-ph" min="0" max="14" step="0.1" value="6.5" oninput="syncSlider('ph', this.value)" placeholder="0-14" />
+      <div class="input-hint">Acidic &lt; 7 &lt; Alkaline</div>
+    </div>
+
+    <!-- Rainfall -->
+    <div class="input-card" id="card-rainfall">
+      <div class="input-card-header">
+        <span class="input-icon">🌧️</span>
+        <div>
+          <div class="input-name">Rainfall</div>
+          <div class="input-unit">mm</div>
+        </div>
+        <div class="input-value-display" id="display-rainfall">203</div>
+      </div>
+      <input type="range" class="slider" id="slider-rainfall" min="0" max="3000" step="1" value="203" oninput="syncInput('rainfall', this.value)" />
+      <input type="number" class="num-input" id="input-rainfall" min="0" max="3000" value="203" oninput="syncSlider('rainfall', this.value)" placeholder="0-3000" />
+      <div class="input-hint">Typical: 0 – 3000 mm</div>
+    </div>
+
+  </div><!-- /input-grid -->
+
+  <!-- Submit -->
+  <div class="submit-row">
+    <button class="btn-predict" id="btnPredict" onclick="runPrediction()">
+      <span class="btn-icon">🔍</span>
+      <span class="btn-text">Recommend Crop</span>
+    </button>
+    <button class="btn-reset" onclick="resetForm()">↺ Reset</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loader-container" id="loader" style="display:none;">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Analyzing soil conditions &amp; running XAI…</div>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="toast toast-error" id="errorToast"></div>
+  <div class="toast toast-success" id="successToast"></div>
+</section>
+
+<!-- ══ RESULTS ══════════════════════════════════════════════════════════ -->
+<section class="section" id="results-section" style="display:none;">
+
+  <!-- Predicted Crop Card -->
+  <div class="result-hero">
+    <div class="result-emoji" id="resultEmoji">🌾</div>
+    <div class="result-info">
+      <div class="result-label">Recommended Crop</div>
+      <div class="result-crop" id="resultCrop">Rice</div>
+      <div class="result-confidence">
+        <div class="conf-bar-wrap">
+          <div class="conf-bar" id="confBar"></div>
+        </div>
+        <span id="confText">95.2% confidence</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model Agreement Banner -->
+  <div class="agreement-banner" id="agreementBanner"></div>
+
+  <!-- Charts Grid -->
+  <div class="charts-grid">
+
+    <!-- SHAP Feature Importance -->
+    <div class="chart-card">
+      <div class="chart-title">📊 SHAP Feature Importance</div>
+      <div class="chart-subtitle">How much each parameter influenced this prediction</div>
+      <div class="chart-wrap">
+        <canvas id="shapChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Top 5 Crops -->
+    <div class="chart-card">
+      <div class="chart-title">🏆 Top 5 Crop Candidates</div>
+      <div class="chart-subtitle">Random Forest confidence scores</div>
+      <div class="chart-wrap">
+        <canvas id="top5Chart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- XAI Text Explanation -->
+  <div class="xai-card">
+    <div class="xai-title">🤖 Why This Crop? — AI Explanation</div>
+    <div class="xai-body" id="xaiBody">
+      <div class="xai-loading">Generating explanation…</div>
+    </div>
+  </div>
+
+  <!-- Per-model Predictions -->
+  <div class="model-preds">
+    <div class="model-pred-title">🔬 All Model Predictions</div>
+    <div class="model-pred-grid" id="modelPredGrid"></div>
+  </div>
+
+</section>
+
+<!-- ══ MODEL COMPARISON ════════════════════════════════════════════════ -->
+<section class="section" id="models-section">
+  <div class="section-header">
+    <h2>📈 Model Performance Comparison</h2>
+    <p>Accuracy on the 20% test set (440 records)</p>
+  </div>
+  <div class="acc-grid" id="accGrid">
+    <div class="acc-card loading-shimmer"></div>
+    <div class="acc-card loading-shimmer"></div>
+    <div class="acc-card loading-shimmer"></div>
+  </div>
+  <div class="chart-card" style="margin-top:1.5rem;">
+    <div class="chart-title">📉 Confusion Matrix — Random Forest</div>
+    <div class="chart-subtitle">Rows = Actual, Columns = Predicted (test set)</div>
+    <div id="cmContainer" class="cm-container">
+      <div class="cm-loading">Loading confusion matrix…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div>🌾 CropAI — Explainable AI Crop Recommendation System</div>
+  <div>Built with Flask · SHAP · Random Forest · Chart.js</div>
+</footer>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
